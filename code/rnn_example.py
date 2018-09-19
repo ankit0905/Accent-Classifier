@@ -30,6 +30,7 @@ print('y_train shape:', y_train.shape)
 print('y_test shape:', y_test.shape)
 print('Build model...')
 
+print(y_train)
 Y_train = np_utils.to_categorical(y_train, nb_classes)
 Y_test = np_utils.to_categorical(y_test, nb_classes)
 

@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-from features import mfcc
-from features import logfbank
+from python_speech_features import mfcc
+from python_speech_features import logfbank
 import scipy.io.wavfile as wav
 from scipy.io.wavfile import write as wav_write
 import librosa
-import scikits.samplerate
+# import scikits.samplerate
 import os
 
 
@@ -30,11 +30,11 @@ def take_moving_average(sig, window_width):
     cumsum_vec = np.cumsum(np.insert(sig, 0, 0))
     ma_vec = (cumsum_vec[window_width:] - cumsum_vec[:-window_width])/float(window_width)
     return ma_vec
-
+        
 # read in signal, change sample rate to outrate (samples/sec), use write_wav=True to save wav file to disk
 def downsample(filename, outrate=8000, write_wav = False):
     (rate, sig) = wav.read(filename)
-    down_sig = librosa.core.resample(sig, rate, outrate, scale=True)
+    down_sig = librosa.core.resample(sig * 1., rate, outrate, scale=True)
     if not write_wav:
         return down_sig, outrate
     if write_wav:
@@ -44,11 +44,14 @@ def downsample(filename, outrate=8000, write_wav = False):
 def make_standard_length(filename, n_samps=240000):
     down_sig, rate = downsample(filename)
     normed_sig = librosa.util.fix_length(down_sig, n_samps)
-    normed_sig = (normed_sig - np.mean(normed_sig))/np.std(normed_sig))
+    normed_sig = (normed_sig - np.mean(normed_sig))/np.std(normed_sig)
     return normed_sig
 
 # from a folder containing wav files, normalize each, divide into num_splits-1 chunks and write the resulting np.arrays to a single matrix
 def make_split_audio_array(folder, num_splits = 5):
+    """
+    returns numpy array of split audio for a folder
+    """
     lst = []
     for filename in os.listdir(folder):
         if filename.endswith('wav'):
@@ -83,7 +86,11 @@ def make_mfcc(filename):
 # for folder containing wav files, output numpy array of normed mfcc
 def make_class_array(folder):
     lst = []
-    for filename in os.listdir(folder):
+    files = os.listdir(folder)
+    count_files = len(files)
+    for idx, file_path in enumerate(files):
+        print("processing idx: ", idx, "out of", count_files)
+        filename = os.path.join(folder, file_path)
         lst.append(make_normed_mfcc(filename))
     class_array = np.array(lst)
     class_array = np.reshape(class_array, (class_array.shape[0], class_array.shape[2], class_array.shape[1]))
@@ -125,7 +132,8 @@ def copy_files_from_csv():
 # input folder of wav files, output pandas dataframe of mean mfcc values
 def make_mean_mfcc_df(folder):
     norms = []
-    for filename in os.listdir(folder):
+    for file_path in os.listdir(folder):
+        filename = os.path.join(folder, file_path)
         (rate, sig) = wav.read(filename)
         mfcc_feat = mfcc(sig, rate)
         mean_mfcc = np.mean(mfcc_feat, axis = 0)

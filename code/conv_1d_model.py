@@ -1,6 +1,7 @@
 
 from __future__ import print_function
 import numpy as np
+from gen_y import generate_y
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import classification_report
 #np.random.seed(1337)  # for reproducibility
@@ -16,17 +17,21 @@ from keras.utils import np_utils
 # set parameters:
 test_dim = 2999
 maxlen = 100
-batch_size = 100
+batch_size = 25
 nb_filter = 64
 filter_length_1 = 50
 filter_length_2 = 25
 hidden_dims = 250
-nb_epoch = 8
-nb_classes = 2
+nb_epoch = 20
+nb_classes = 31
 
 print('Loading data...')
-X = np.load('usa373_span162_mfcc_13.npy')
-y = np.append(np.ones(373), np.zeros(162))
+#X = np.load('usa373_span162_mfcc_13.npy')
+X = np.load('top_3_100_split_mfcc.npy')
+print(X.shape)
+#y = np.append(np.ones(3), np.zeros(6))
+y = generate_y('/media/enigmaeth/My Passport/sounds_wav/')
+print(y.shape)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15)
 
@@ -100,14 +105,14 @@ model.add(Dropout(0.25))
 # model.add(Activation('relu'))
 
 # We project onto a single unit output layer, and squash it with a sigmoid:
-model.add(Dense(2))
+model.add(Dense(nb_classes))
 model.add(Activation('softmax'))
 
 model.compile(loss='binary_crossentropy',
-              optimizer='rmsprop')
+              optimizer='rmsprop', metrics=['accuracy'])
 model.fit(X_train, Y_train, batch_size=batch_size,
           nb_epoch=nb_epoch,  verbose=1,
-          validation_data=(X_test, Y_test), show_accuracy=True)
+          validation_data=(X_test, Y_test))
 
 #y_preds = model.predict(X_test)
 
